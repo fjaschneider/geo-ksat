@@ -205,7 +205,7 @@ sp::spplot(mapa_idw, 'z5.pred', col.regions = col_soil_var,
 
 ```{r Importar dados}
 
-kPain <- kPa[!is.na(kPa$z0),] #selecionar os pontos da coluna UM que não sejam NA
+kPain <- kPa[!is.na(kPa$z5),] #selecionar os pontos da coluna UM que não sejam NA
 
 ```
 
@@ -214,14 +214,20 @@ kPain <- kPa[!is.na(kPa$z0),] #selecionar os pontos da coluna UM que não sejam 
 #Calcular residuos
 kPain@data <-
   kPain@data %>%
-  group_by(z0) %>% #agrupar pela unidade de mapeamento
+  group_by(z5) %>% #agrupar pela unidade de mapeamento
   mutate(
-    residuo = z0 - mean(z0))
+    residuo = z5 - mean(z5))
 
 #bubbleplot
 sp::bubble(kPain, 'residuo', do.sqrt=TRUE, main=" ")
 ```
 
+```{r Variograma, fig.asp=1, fig.width=10, fig.height=10}
+limites <- seq(0, 2500, length.out=15)
+variograma <- gstat::variogram(residuo ~ 1, kPain, boundaries = limites)
+plot(variograma, ylab = "Semivariância", xlab = "Distância (m)", pch = 20, cex = 1.5)
+
+```
 
 
 
