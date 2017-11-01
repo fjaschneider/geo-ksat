@@ -14,7 +14,7 @@ rmarkdown::render("main.Rmd", encoding = "UTF-8", output_dir = "../docs")
 
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, fig.asp = 1)
 ```
 
 
@@ -34,3 +34,86 @@ Descrição do local e da metodologia que é empregada no estudo desenvolvido
 Resultados dos experimentos
 
 # Referências
+
+# Projeto de resistência a penetração
+
+Carregar os pacotes
+
+```{r}
+library(devtools)
+library(magrittr)
+library(dplyr)
+library(lattice)
+library(gstat)
+library(sp)
+library(mapview)
+```
+
+
+
+
+# Para importar os dados de uma tabela .csv
+
+```{r}
+kPa <- read.csv("../data/Penetrometria.csv", dec = ".")
+kPa
+# str("../data/20150803.csv")
+# Caso a planilha tivesse texto.
+
+#read.csv("../data/20150803.csv", dec = ",", sep = ";", stringsAsFactors = FALSE)
+
+
+
+# 
+#dados <- readr::read_csv("../data/20150803.csv", comment = "Resistência a penetração")
+```
+
+
+
+
+Passar para as coordenadas e inserir a parcela BST
+
+```{r}
+wgs84utm22s <- sp::CRS ('+proj=utm +zone=22 +south +ellps=WGS84 +datum=WGS84 +units=m +no_defs') #projeta utm
+
+#wgs84 <- sp :: CRS ('+proj=longlat + ellps=WGS84') #geográfica pegar do help
+```
+
+```{r Transformar coord}
+sp::coordinates(kPa) <- c('E' , 'N') #perfis25 se torna um objeto espacial
+
+sp::proj4string(kPa) <- wgs84utm22s #coordenada referencia
+
+#perfis25 <- sp :: spTransform(perfis25, wgs84utm22s) #transforma coordenada para wgs84
+plot(kPa)
+```
+
+
+```{r Carregar o contorno da BST}
+#shape no pacote raster pela função shapefile
+
+contorno <- 
+raster::shapefile('../data/poligono/contorno.shp')
+
+#criar espaço para figura
+sp::spplot(contorno, "AREA", scales = list(draw = TRUE), main = "BST", colorkey = FALSE)
+plot(kPa)
+mapview::mapview(contorno)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
