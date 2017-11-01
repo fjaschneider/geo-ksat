@@ -2,9 +2,35 @@
 title: "Ksat"
 output:
   bookdown::word_document2:
+    reference_docx: ../docs/template.docx
+bibliography: biblio.bib
+csl: abnt.csl
 lang: pt
 ---
+
+```{r, eval=FALSE, echo=FALSE}
+rmarkdown::render("main.Rmd", encoding = "UTF-8", output_dir = "../docs")
+```
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+
+
+# Introdução
+
+Texto de exemplo para criação de artigo
+Como proceder. Agora é só criar novos templates para diferentes estilos de revista [@Mei2017].
+
+Referências @Mei2017.
+
+# Material e Métodos 
+
+Descrição do local e da metodologia que é empregada no estudo desenvolvido
+
+# Resultados
+
+Resultados dos experimentos
+
+# Referências
