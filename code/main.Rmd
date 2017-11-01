@@ -47,6 +47,7 @@ library(lattice)
 library(gstat)
 library(sp)
 library(mapview)
+library(sf)
 ```
 
 
@@ -95,23 +96,131 @@ plot(kPa)
 contorno <- 
 raster::shapefile('../data/poligono/contorno.shp')
 
+sp::proj4string(contorno) <- wgs84utm22s #coordenada referencia
+
 #criar espaço para figura
 sp::spplot(contorno, "AREA", scales = list(draw = TRUE), main = "BST", colorkey = FALSE)
-plot(kPa)
-mapview::mapview(contorno)
+plot(contorno)
+
+# Plotar duas ou mais leyers, função "list"
+mapview::mapview(list(sf::st_as_sf(contorno), sf::st_as_sf(kPa)))
 ```
 
 
+```{r, primeira camada z0}
+#Avaliacao estatistica dos dados
+
+kPa@data
+
+kPa@data %>%
+  filter(!is.na(z0)) %>% #EXCLUIR NA - retora os que não são na com !
+  group_by(z0) %>% #agrupar as informações em função das um
+  summarise(
+    media = mean(z0),
+    ic95 = 1.96 * sd(z0)/sqrt(n()),
+    n = n()
+  ) %>%
+  mutate(
+    inf = round(media - ic95), 
+    media = round(media),
+    sup = round(media + ic95)) %>%
+  
+  select(z0, inf, media, sup, n)
+
+```
+
+```{r Modelo continuo de variacao espacial}
+
+#Modelo contínuo de variação deterministica
+#Um modelo discreto de variação é perfeito pra representar as variações abrutas. O modelo continuo considera que as variaveis tem uma variação continua no espaço.
+#Um modelo digital de elevação é um modelo deterministico continuo, incapaz de assumir que possui erros. A saída é unica e assume-se que a natureza é assim.
+
+#Criar o modelo
+grid <- sp::spsample(contorno, 10000, type = 'regular')
+plot(grid@coords, asp = 1)
+
+#Criar o modelo
+modelo_idw <- gstat::gstat(
+  id= 'z0', formula = z0 ~ 1,
+  data= kPa, nmax = 5, set = list(idp = 0.5))
+modelo_idw
+
+mapa_idw <- predict(modelo_idw, grid)
+sp::gridded(mapa_idw) <- T #transformar em pixel
+sp::spplot(mapa_idw, 'z0.pred', col.regions = col_soil_var,
+           main = "Interpolação determinística") +
+  latticeExtra::as.layer(lattice::xyplot(
+    N ~ E, data = kPa@coords %>% as.data.frame(),
+    pch = 21, col = 'red', cex = 0.5))
+```
 
 
+```{r, segunda camada z5}
+#Avaliacao estatistica dos dados
+
+kPa@data
+
+kPa@data %>%
+  filter(!is.na(z5)) %>% #EXCLUIR NA - retora os que não são na com !
+  group_by(z5) %>% #agrupar as informações em função das um
+  summarise(
+    media = mean(z5),
+    ic95 = 1.96 * sd(z5)/sqrt(n()),
+    n = n()
+  ) %>%
+  mutate(
+    inf = round(media - ic95), 
+    media = round(media),
+    sup = round(media + ic95)) %>%
+  
+  select(z5, inf, media, sup, n)
+
+```
+
+```{r Modelo continuo de variacao espacial}
+
+#Modelo contínuo de variação deterministica
+#Um modelo discreto de variação é perfeito pra representar as variações abrutas. O modelo continuo considera que as variaveis tem uma variação continua no espaço.
+#Um modelo digital de elevação é um modelo deterministico continuo, incapaz de assumir que possui erros. A saída é unica e assume-se que a natureza é assim.
+
+#Criar o modelo
+grid <- sp::spsample(contorno, 10000, type = 'regular')
+plot(grid@coords, asp = 1)
+
+#Criar o modelo
+modelo_idw <- gstat::gstat(
+  id= 'z5', formula = z5 ~ 1,
+  data= kPa, nmax = 10, set = list(idp = 0.5))
+modelo_idw
+
+mapa_idw <- predict(modelo_idw, grid)
+sp::gridded(mapa_idw) <- T #transformar em pixel
+sp::spplot(mapa_idw, 'z5.pred', col.regions = col_soil_var,
+           main = "Interpolação determinística") +
+  latticeExtra::as.layer(lattice::xyplot(
+    N ~ E, data = kPa@coords %>% as.data.frame(),
+    pch = 21, col = 'red', cex = 0.5))
+```
 
 
+```{r Importar dados}
 
+kPain <- kPa[!is.na(kPa$z0),] #selecionar os pontos da coluna UM que não sejam NA
 
+```
 
+```{r Calcular os residuos}
 
+#Calcular residuos
+kPain@data <-
+  kPain@data %>%
+  group_by(z0) %>% #agrupar pela unidade de mapeamento
+  mutate(
+    residuo = z0 - mean(z0))
 
-
+#bubbleplot
+sp::bubble(kPain, 'residuo', do.sqrt=TRUE, main=" ")
+```
 
 
 
