@@ -1,6 +1,8 @@
 ---
-title: "Untitled"
-output: html_document
+title: "Ksat"
+output:
+  bookdown::word_document2:
+lang: pt
 ---
 
 ```{r setup, include=FALSE}
